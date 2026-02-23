@@ -12,8 +12,8 @@ Returns whether the player's inventory can fit a certain number of an item.
 ## Examples
 
 - `%inventorycanfit_diamond_sword_2%`
-- `%inventorycanfit_stone_50`
-- `%inventorycanfit_spaceleft_stone`
+- `%inventorycanfit_stone_50%`
+- `%inventorycanfit_spaceleft_stone%`
 
 ## Notes
 
