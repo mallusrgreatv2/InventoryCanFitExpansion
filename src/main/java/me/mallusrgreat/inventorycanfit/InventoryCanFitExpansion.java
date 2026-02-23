@@ -36,24 +36,27 @@ public class InventoryCanFitExpansion extends PlaceholderExpansion implements Co
     @Override
     public String onPlaceholderRequest(Player player, @NonNull String params) {
         boolean debug = getBoolean("debug", false);
+        boolean spaceLeft = params.startsWith("spaceleft_");
         String prefix = "Got placeholder: " + params + " | ";
         if (player == null) {
             if (debug) info(prefix + "Player is null!");
             return null;
         }
         String[] split = params.split("_");
-        String itemName = String.join("_", Arrays.copyOfRange(split, 0, split.length - 1));
+        String itemName = String.join("_", Arrays.copyOfRange(split, spaceLeft ? 1 : 0, split.length - (spaceLeft ? 0 : 1)));
         Integer amount = null;
         try {
             amount = Integer.parseInt(split[split.length - 1]);
         } catch (NumberFormatException ignored) {}
-        if (amount == null) {
-            if (debug) info(prefix + "Amount is null!");
-            return null;
-        }
-        if (amount <= 0) {
-            if (debug) info(prefix + "Amount is less than or equal to zero!");
-            return null;
+        if (!spaceLeft) {
+            if (amount == null) {
+                if (debug) info(prefix + "Amount is null!");
+                return null;
+            }
+            if (amount <= 0) {
+                if (debug) info(prefix + "Amount is less than or equal to zero!");
+                return null;
+            }
         }
         NamespacedKey key = NamespacedKey.fromString(itemName);
         if (key == null) {
@@ -65,16 +68,20 @@ public class InventoryCanFitExpansion extends PlaceholderExpansion implements Co
             if (debug) info(prefix + "Material is null!");
             return null;
         }
-        return String.valueOf(canFit(player.getInventory(), new ItemStack(material, amount)));
+        ItemStack stack = new ItemStack(material, amount == null ? 1 : amount);
+        PlayerInventory inventory = player.getInventory();
+        return spaceLeft
+                ? String.valueOf(getSpaceLeft(inventory, stack))
+                : String.valueOf(getSpaceLeft(inventory, stack) >= amount);
     }
 
-    private boolean canFit(PlayerInventory inv, ItemStack item) {
+    private int getSpaceLeft(PlayerInventory inventory, ItemStack item) {
         int space = 0;
-        for (ItemStack content : inv.getStorageContents()) {
+        for (ItemStack content : inventory.getStorageContents()) {
             if(content == null) space += item.getMaxStackSize();
             else if(item.isSimilar(content)) space += item.getMaxStackSize() - content.getAmount();
         }
-        return space >= item.getAmount();
+        return space;
     }
 
     @Override
